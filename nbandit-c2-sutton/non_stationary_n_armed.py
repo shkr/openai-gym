@@ -8,16 +8,19 @@ p_matrix = np.random.rand(N)
 
 class NonStationaryBandit(object):
 
-    def __init__(self, initial_reward, stationary_time_limit=10):
+    def __init__(self, initial_reward, stationary_time_limit=100):
         self.reward = initial_reward
-        self._counter = 0
+        self._counter = -1
         self._stationary_time_limit = stationary_time_limit
 
     def act(self):
+        self._counter += 1
         if self._counter < self._stationary_time_limit:
             return self.reward
+
         # Otherwise begin random walk
         random_value = random.random()
+
         if random_value < 0.5:
             return 1
         else:
@@ -45,13 +48,12 @@ class IncrementalSampleAverageUpdate(object):
 
     def update(self, t, last_obs, last_act, last_reward):
         self.q_matrix[last_act] = self.q_matrix[last_act] + self.alpha(t)*(last_reward - self.q_matrix[last_act])
-        if(last_reward < 0.0):
-            print ("Negative!")
         self.total_reward += last_reward
+
 def train(no_of_bandits, no_of_train_episodes):
     t = 1
 
-    bandits = [ NonStationaryBandit(1.0, 3) for i in range(0, no_of_bandits) ]
+    bandits = [ NonStationaryBandit(1.0) for i in range(0, no_of_bandits) ]
     agent = IncrementalSampleAverageUpdate(no_of_bandits)
 
     while t <= no_of_train_episodes:

@@ -33,6 +33,8 @@ class EGreedySoftmax(Agent):
         """
         :param t the count for the training step
         """
+        print(e)
+        print(type(e))
         if np.random.randn() < self.e:
             return np.random.randint(self._action_space)
         else:

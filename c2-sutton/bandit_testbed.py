@@ -31,11 +31,12 @@ class TestBed(object):
     agent is the agent which is playing in this testbed.
     the agent_cls is expected to extend Agent class
     """
-    def __init__(self, n_arms, n_plays, n_games, agent_cls):
+    def __init__(self, n_arms, n_plays, n_games, agent_cls, cls_args):
         self._n_arms = n_arms
         self._n_plays = n_plays
         self._n_games = n_games
         self._agent_cls = agent_cls
+        self._cls_args = cls_args
         self._games = []
 
     @staticmethod
@@ -66,7 +67,7 @@ class TestBed(object):
 
     def run_all_games(self):
         for i in range(0, self._n_games):
-            game = self.run_game(Bandit(self._n_arms), self._agent_cls(self._n_arms), self._n_plays)
+            game = self.run_game(Bandit(self._n_arms), self._agent_cls(self._n_arms, **self._cls_args), self._n_plays)
             self._games.append(game)
 
 

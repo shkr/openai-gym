@@ -63,6 +63,9 @@ class TestBed(object):
             game["optimal_action"].append(action==optimal_action)
             game["prob_optimal_action"].append(sum(game["optimal_action"])/(i+1.0))
 
+        game["optimal_reward"] = optimal_reward
+        game["optimal_action"] = optimal_action
+
         return game
 
     def run_all_games(self):

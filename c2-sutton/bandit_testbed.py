@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-
+from multiprocessing import Pool
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
@@ -69,15 +69,6 @@ class TestBed(object):
         return game
 
     def run_all_games(self):
-        for i in range(0, self._n_games):
-            game = self.run_game(Bandit(self._n_arms), self._agent_cls(self._n_arms, **self._cls_args), self._n_plays)
-            self._games.append(game)
-
-
-if __name__=='__main__':
-    from agents import EGreedy, EGreedySoftmax
-
-    testbed = TestBed(10, 1000, 1, EGreedy)
-    testbed.run_all_games()
-    print(testbed._games)
-
+        pool = Pool()
+        games = pool.starmap(self.run_game, [(Bandit(self._n_arms), self._agent_cls(self._n_arms, **self._cls_args), self._n_plays) for i in range(0, self._n_games)])
+        self._games = games

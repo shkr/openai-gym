@@ -13,13 +13,14 @@ class Bandit(object):
     """
     def __init__(self, n_arms):
         self._n_arms = n_arms
-        self.Q_star = np.random.randn(n_arms)
+        self.Q_star = np.random.randn(self._n_arms)
 
     def act(self, a):
         """
         :param a: a is the index of the arm that is used or the action applied on the bandit
         """
-        return self.Q_star[a] + np.random.randn()
+        random_normal_sample = float(np.random.randn())
+        return float(self.Q_star[a]) + random_normal_sample
 
 class TestBed(object):
     """
@@ -39,16 +40,16 @@ class TestBed(object):
         self._cls_args = cls_args
         self._games = []
 
-    @staticmethod
-    def run_game(bandit, agent, n_plays):
+    @classmethod
+    def run_game(cls, bandit, agent, n_plays):
         """
         """
-        total_reward = 0.0
         game = {
                 "reward": [],
                 "average_reward": [],
                 "optimal_action": [],
                 "prob_optimal_action": [],
+                "total_reward" : 0.0
         }
         optimal_action = np.argmax(bandit.Q_star)
         optimal_reward = np.max(bandit.Q_star)
@@ -57,18 +58,18 @@ class TestBed(object):
             action = agent.select_action()
             reward = bandit.act(action)
             agent.send_observation(action, reward, {})
-
             game["reward"].append(reward)
             game["average_reward"].append(sum(game["reward"])/(i+1.0))
             game["optimal_action"].append(action==optimal_action)
             game["prob_optimal_action"].append(sum(game["optimal_action"])/(i+1.0))
+            game["total_reward"] += reward
 
         game["optimal_reward"] = optimal_reward
-        game["optimal_action"] = optimal_action
 
         return game
 
     def run_all_games(self):
-        pool = Pool()
-        games = pool.starmap(self.run_game, [(Bandit(self._n_arms), self._agent_cls(self._n_arms, **self._cls_args), self._n_plays) for i in range(0, self._n_games)])
+        pool = Pool(3)
+        games = pool.starmap(self.run_game, [(Bandit(self._n_arms), \
+            self._agent_cls(self._n_arms, **self._cls_args), self._n_plays) for i in range(0, self._n_games)])
         self._games = games

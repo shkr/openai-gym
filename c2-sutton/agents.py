@@ -19,6 +19,102 @@ class Agent(object):
         :param obs_params: other observation parameters
         """
 
+class SupervisedBinaryAgent(Agent):
+    """
+    A Supervisory agent
+    which keeps a tally of instructions where a true signal
+    has been received between two choices. Then it consistently
+    chooses the action with the highest rate of true signals
+    """
+    def __init__(self):
+        self.q_matrix = np.zeros(2)
+
+    def select_action(self):
+        """
+        """
+        scores = self.q_matrix
+        return np.argmax(scores)
+
+    def send_observation(self, action, reward, obs_param):
+        """
+        """
+        if obs_param['is_correct']:
+            self.q_matrix[action] += 1
+
+
+class LRI(Agent):
+    """
+    Linear Reward Inaction
+    This is a classical method from the field of learning automata
+    It imitates a supervised learning algorithm however it is stochastic.
+    Instead of committing totally to the correct action it updates
+    a probability to select it after each action and uses that.
+    """
+
+    def __init__(self, action_space=2, alpha=0.1):
+        self._action_space = action_space
+        self._alpha = alpha
+        self.q_matrix = np.full(action_space, 1.0/action_space)
+
+    def select_action(self):
+        """
+        """
+        scores = self.q_matrix
+        rand_value = np.random.uniform()
+        for i in range(0, self._action_space):
+            cum_prob = 0 if i==0 else sum(sel_prob[0: i])
+            if (rand_value > cum_prob) and (rand_value <= (cum_prob + scores[i])):
+                return i
+
+    def send_observation(self, action, reward, obs_param):
+        """
+        """
+        if obs_param['is_correct']:
+            prob_addition  = self.alpha*(1-self.q_matrix[action])
+
+            for this_action in range(0, self.action_space):
+                if this_action is action and obs_param['is_correct']:
+                    self.q_matrix[action] += prob_addition
+                else:
+                    self.q_matrix[action] -= prob_addition/(self.action_space-1)
+
+
+class LRP(Agent):
+    """
+    Linear Reward Penalty
+    This is a classical method from the field of learning automata
+    It imitates a supervised learning algorithm however it is stochastic.
+    Instead of committing totally to the correct action it updates
+    a probability to select it after each action and uses that.
+    """
+
+    def __init__(self, action_space=2, alpha=0.1):
+        self._action_space = action_space
+        self._alpha = alpha
+        self.q_matrix = np.full(action_space, 1.0/action_space)
+
+    def select_action(self):
+        """
+        """
+        scores = self.q_matrix
+        rand_value = np.random.uniform()
+        for i in range(0, self._action_space):
+            cum_prob = 0 if i==0 else sum(sel_prob[0: i])
+            if (rand_value > cum_prob) and (rand_value <= (cum_prob + scores[i])):
+                return i
+
+    def send_observation(self, action, reward, obs_param):
+        """
+        """
+        prob_modifier  = (-1+(2*obs_parma['is_correct'])) * self.alpha*(1-self.q_matrix[action])
+
+        for this_action in range(0, self.action_space):
+            if this_action==action:
+                self.q_matrix[action] += prob_addition
+            else:
+                self.q_matrix[action] -= prob_addition/(self.action_space-1)
+
+
 class SoftmaxFixedStep(Agent):
     """
     :param e is set to 0.01

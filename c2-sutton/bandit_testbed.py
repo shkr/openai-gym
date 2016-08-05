@@ -48,9 +48,9 @@ class InstructiveBinaryBandit(Environment):
     """
     def __init__(self, _type):
         if _type is 'A':
-            self.Q_star = np.full(2, 0.1)
+            self.Q_star = np.full(2, 0.1 + np.random.randn())
         else:
-            self.Q_star = np.full(2, 0.9)
+            self.Q_star = np.full(2, 0.9 + np.random.randn())
 
     def act(self, a):
         """
@@ -99,7 +99,7 @@ class InstructiveBinaryTestBed(object):
     def run_all_games(self, _type):
         pool = Pool(3)
         games = pool.starmap(self.run_game, [(InstructiveBinaryBandit(_type), \
-            self._agent_cls(self._n_arms, **self._cls_args), self._n_plays) for i in range(0, self._n_games)])
+            self._agent_cls(**self._cls_args), self._n_plays) for i in range(0, self._n_games)])
         return games
 
 

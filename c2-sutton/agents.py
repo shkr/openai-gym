@@ -59,24 +59,24 @@ class LRI(Agent):
     def select_action(self):
         """
         """
-        scores = self.q_matrix
+        sel_prob = self.q_matrix
         rand_value = np.random.uniform()
         for i in range(0, self._action_space):
             cum_prob = 0 if i==0 else sum(sel_prob[0: i])
-            if (rand_value > cum_prob) and (rand_value <= (cum_prob + scores[i])):
+            if (rand_value > cum_prob) and (rand_value <= (cum_prob + sel_prob[i])):
                 return i
 
     def send_observation(self, action, reward, obs_param):
         """
         """
         if obs_param['is_correct']:
-            prob_addition  = self.alpha*(1-self.q_matrix[action])
+            prob_modifier  = self._alpha*(1-self.q_matrix[action])
 
-            for this_action in range(0, self.action_space):
-                if this_action is action and obs_param['is_correct']:
-                    self.q_matrix[action] += prob_addition
+            for this_action in range(0, self._action_space):
+                if this_action is action:
+                    self.q_matrix[action] += prob_modifier
                 else:
-                    self.q_matrix[action] -= prob_addition/(self.action_space-1)
+                    self.q_matrix[action] -= prob_modifier/(self._action_space-1)
 
 
 class LRP(Agent):
@@ -96,23 +96,25 @@ class LRP(Agent):
     def select_action(self):
         """
         """
-        scores = self.q_matrix
+        sel_prob = self.q_matrix
         rand_value = np.random.uniform()
         for i in range(0, self._action_space):
             cum_prob = 0 if i==0 else sum(sel_prob[0: i])
-            if (rand_value > cum_prob) and (rand_value <= (cum_prob + scores[i])):
+            if (rand_value > cum_prob) and (rand_value <= (cum_prob + sel_prob[i])):
                 return i
 
     def send_observation(self, action, reward, obs_param):
         """
         """
-        prob_modifier  = (-1+(2*obs_parma['is_correct'])) * self.alpha*(1-self.q_matrix[action])
 
-        for this_action in range(0, self.action_space):
+        prob_modifier  = self._alpha*(1-self.q_matrix[action])
+        modifier_sign = 2*obs_param['is_correct']  - 1
+
+        for this_action in range(0, self._action_space):
             if this_action==action:
-                self.q_matrix[action] += prob_addition
+                self.q_matrix[action] += (prob_modifier*modifier_sign)
             else:
-                self.q_matrix[action] -= prob_addition/(self.action_space-1)
+                self.q_matrix[action] += (-1*prob_modifier*modifier_sign)/(self._action_space-1)
 
 
 class SoftmaxFixedStep(Agent):

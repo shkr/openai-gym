@@ -177,10 +177,38 @@ class Softmax(Agent):
         self.q_play[action] += 1
         self.q_matrix[action] = self.q_matrix[action] + (1.0/self.q_play[action])*(reward - self.q_matrix[action])
 
+class EGreedyFixedStep(Agent):
+    """
+    Incremental Sample Average Method
+    """
+    def __init__(self, action_space, e, step_size):
+        self._action_space = action_space
+        self.e = e
+        self.Q_matrix = np.zeros(action_space)
+        self.Q_play = np.zeros(action_space)
+        self.step_size = step_size
+
+    def select_action(self):
+        """
+        :param t the count for the training step
+        """
+        if np.random.uniform() <= self.e:
+            return np.random.randint(self._action_space)
+        else:
+            return np.argmax(self.q_matrix)
+
+    def send_observation(self, action, reward, obs_params):
+        """
+        """
+        # Update equation
+        self.Q_play[action] += 1
+        self.Q_matrix[action] = self.Q_matrix[action] + (self.step_size)*(reward - self.Q_matrix[action])
+
 
 class EGreedy(Agent):
     """
     :param e is set to 0.01
+    :note Solution to exercise 2.5 where e-greedy algorithm using incremental update for sample averages has to be implemented.
     """
     def __init__(self, action_space, e):
         self._action_space = action_space

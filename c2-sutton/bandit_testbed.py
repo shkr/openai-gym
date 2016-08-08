@@ -41,16 +41,12 @@ class Bandit(Environment):
 
 class InstructiveBinaryBandit(Environment):
     """
-    A Bandit with n_arms
-    It sends a sample from a guassian distribution centered at a mean for each arm
-    and variance 1.
-    It stores the means for each arm in the matrix Q_star of shape (n_arms)
     """
     def __init__(self, _type):
         if _type is 'A':
-            self.Q_star = np.full(2, 0.1 + np.random.randn())
+            self.Q_star = np.array([0.1, 0.2])
         else:
-            self.Q_star = np.full(2, 0.9 + np.random.randn())
+            self.Q_star = np.array([0.8, 0.9])
 
     def act(self, a):
         """
@@ -58,9 +54,9 @@ class InstructiveBinaryBandit(Environment):
         """
         random_uniform_sample = np.random.random()
         if random_uniform_sample < self.Q_star[a]:
-            return True
+            return 1.0
         else:
-            return False
+            return 0.0
 
 
 class InstructiveBinaryTestBed(object):
@@ -85,13 +81,12 @@ class InstructiveBinaryTestBed(object):
         """
         game = {"optimal_action": [],
                 "prob_optimal_action": []}
-
+        optimal_action = np.argmax(bandit.Q_star)
         for i in range(0, n_plays):
-
             action = agent.select_action()
-            label = bandit.act(action)
-            agent.send_observation(action, None, {'is_correct': label})
-            game["optimal_action"].append(label)
+            reward = bandit.act(action)
+            agent.send_observation(action, reward, {'is_correct': reward==1.0})
+            game["optimal_action"].append(action==optimal_action)
             game["prob_optimal_action"].append(sum(game["optimal_action"])/(i+1.0))
 
         return game

@@ -233,3 +233,73 @@ class EGreedy(Agent):
         self.q_matrix[action] = self.q_matrix[action] + (1.0/self.q_play[action])*(reward - self.q_matrix[action])
 
 
+class ReinforcementComparison(Agent):
+    """
+    Reinforcement comparison method
+    updates action selection probability by
+    a modifier on the existing probability
+    which is the difference between the reference
+    reward and the reward received for that action
+    """
+    def __init__(self, action_space, beta, init_reference_reward = 0.0, alpha = None):
+        self._action_space = action_space
+        # Fixed size parameter to update the refrence reward or calculate the sample average if it is none
+        self._alpha = alpha
+        # positive step size parameter to modify the selection probability
+        self._beta = beta
+        self.q_matrix = np.fill(action_space, 1.0/action_space)
+        self.q_play = np.zeros(action_space)
+        self.reference_reward = init_reference_reward
+
+    def select_action(self):
+        """
+        """
+        rand_value = np.random.uniform()
+        prob_exp = np.exp(self.q_matrix)
+        exp_sum = sum(prob_exp)
+        sel_prob = prob_exp/ exp_sum
+        for i in range(self._action_space):
+            cum_prob = sum(self.sel_prob[0:i+1]) if i!=self._action_space else 1.0
+            if rand_value < cum_prob:
+                return i
+
+    def send_observation(self, action, reward, obs_param):
+        self.q_matrix[action] += self._beta*(reward - self.reference_reward)
+        self.q_play[action] += 1
+        alpha = self._alpha if self._alpha != None else 1.0/sum(self.q_play)
+        self.reference_reward += alpha*(reward - self.reference_reward)
+
+
+
+class PursuitMethod(Agent):
+    """
+    Pursuit methods the sample average or the
+    action value estimates are stored. The action preferences
+    are stored and modified by pursuing the greedy action
+    """
+    def __init__(self, action_space, beta):
+        self._action_space = action_space
+        self._beta = beta
+        self.q_matrix = np.zeros(action_space)
+        self.q_play = np.zeros(action_space)
+        self.p_matrix = np.fill(action_space, 1.0/action_space)
+
+    def select_action(self):
+        """
+        """
+        rand_value = np.random.uniform()
+        for i in range(self._action_space):
+            cum_prob = self.p_matrix[0:i+1] if i!= self._action_space else 1.0
+            if rand_value < cum_prob:
+                return i
+
+    def send_observation(self, action, reward, obs_param):
+        self.q_play[action] += 1
+        self.q_matrix += (1.0/self.q_play[action])*(reward - self.q_matrix[action])
+        greedy_action = np.argmax(self.q_matrix)
+        self.p_matrix[greedy_action] += self._beta*(1 - self.p_matrix[greedy_action])
+        for action in range(self._action_space):
+            if action!=greedy_action:
+                self.p_matrix[action] -= self._beta*(self._p_matrix[action])
+
+

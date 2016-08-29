@@ -54,9 +54,9 @@ class InstructiveBinaryBandit(Environment):
         """
         random_uniform_sample = np.random.random()
         if random_uniform_sample < self.Q_star[a]:
-            return 1.0
+            return 1, {'success': True}
         else:
-            return 0.0
+            return 0, {'success': False}
 
 
 class InstructiveBinaryTestBed(object):
@@ -84,8 +84,8 @@ class InstructiveBinaryTestBed(object):
         optimal_action = np.argmax(bandit.Q_star)
         for i in range(0, n_plays):
             action = agent.select_action()
-            reward = bandit.act(action)
-            agent.send_observation(action, reward, {'is_correct': reward==1.0})
+            reward, obs_params = bandit.act(action)
+            agent.send_observation(action, reward, obs_params)
             game["optimal_action"].append(action==optimal_action)
             game["prob_optimal_action"].append(sum(game["optimal_action"])/(i+1.0))
 

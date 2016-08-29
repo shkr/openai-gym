@@ -38,9 +38,11 @@ class SupervisedBinaryAgent(Agent):
     def send_observation(self, action, reward, obs_param):
         """
         """
-        if obs_param['is_correct']:
+        if obs_param['success']:
             self.q_matrix[action] += 1
-
+        else:
+            other_action = (1-action)%2
+            self.q_matrix[other_action] += 1
 
 class LRI(Agent):
     """
@@ -69,7 +71,7 @@ class LRI(Agent):
     def send_observation(self, action, reward, obs_param):
         """
         """
-        if obs_param['is_correct']:
+        if obs_param['success']:
             prob_modifier  = self._alpha*(1-self.q_matrix[action])
 
             for this_action in range(0, self._action_space):
@@ -108,7 +110,7 @@ class LRP(Agent):
         """
 
         prob_modifier  = self._alpha*(1-self.q_matrix[action])
-        modifier_sign = 2*obs_param['is_correct']  - 1
+        modifier_sign = 2*obs_param['success']  - 1
 
         for this_action in range(0, self._action_space):
             if this_action==action:

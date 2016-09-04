@@ -249,7 +249,7 @@ class ReinforcementComparison(Agent):
         self._alpha = alpha
         # positive step size parameter to modify the selection probability
         self._beta = beta
-        self.q_matrix = np.fill(action_space, 1.0/action_space)
+        self.q_matrix = np.full(action_space, 1.0/action_space)
         self.q_play = np.zeros(action_space)
         self.reference_reward = init_reference_reward
 
@@ -261,7 +261,7 @@ class ReinforcementComparison(Agent):
         exp_sum = sum(prob_exp)
         sel_prob = prob_exp/ exp_sum
         for i in range(self._action_space):
-            cum_prob = sum(self.sel_prob[0:i+1]) if i!=self._action_space else 1.0
+            cum_prob = sum(sel_prob[0:i+1]) if i!=self._action_space else 1.0
             if rand_value < cum_prob:
                 return i
 
@@ -284,14 +284,14 @@ class PursuitMethod(Agent):
         self._beta = beta
         self.q_matrix = np.zeros(action_space)
         self.q_play = np.zeros(action_space)
-        self.p_matrix = np.fill(action_space, 1.0/action_space)
+        self.p_matrix = np.full(action_space, 1.0/action_space)
 
     def select_action(self):
         """
         """
         rand_value = np.random.uniform()
         for i in range(self._action_space):
-            cum_prob = self.p_matrix[0:i+1] if i!= self._action_space else 1.0
+            cum_prob = sum(self.p_matrix[0:i+1]) if i!= self._action_space else 1.0
             if rand_value < cum_prob:
                 return i
 
@@ -302,6 +302,6 @@ class PursuitMethod(Agent):
         self.p_matrix[greedy_action] += self._beta*(1 - self.p_matrix[greedy_action])
         for action in range(self._action_space):
             if action!=greedy_action:
-                self.p_matrix[action] -= self._beta*(self._p_matrix[action])
+                self.p_matrix[action] -= self._beta*(self.p_matrix[action])
 
 

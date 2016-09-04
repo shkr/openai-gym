@@ -26,13 +26,15 @@ if __name__ == '__main__':
     max_steps = 200
     reward = 0
     done = False
-
+    print("action space = {} and size = {}".format(env.action_space, env.action_space.__dict__))
+    sys.exit(-1)
     for i in range(episode_count):
         ob = env.reset()
 
         for j in range(max_steps):
             action = agent.act(ob, reward, done)
             ob, reward, done, _ = env.step(action)
+            print("Observation = {} and reward = {} and done = {}".format(ob, reward, done))
             if done:
                 break
 

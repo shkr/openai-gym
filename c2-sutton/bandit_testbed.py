@@ -144,8 +144,14 @@ class TestBed(object):
 
         return game
 
-    def run_all_games(self):
-        pool = Pool(3)
-        games = pool.starmap(self.run_game, [(Bandit(self._n_arms), \
+    def run_all_games(self, multi_thread=True):
+        if multi_thread:
+            pool = Pool(3)
+            games = pool.starmap(self.run_game, [(Bandit(self._n_arms), \
             self._agent_cls(self._n_arms, **self._cls_args), self._n_plays) for i in range(0, self._n_games)])
-        self._games = games
+            self._games = games
+        else:
+            games = []
+            for i in range(0, self._n_games):
+                games.append(self.run_game(Bandit(self._n_arms), self._agent_cls(self._n_arms, **self._cls_args), self._n_plays))
+            self._games = games

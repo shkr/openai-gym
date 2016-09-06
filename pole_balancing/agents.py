@@ -3,6 +3,9 @@ import os, sys
 import abc
 import gym
 import numpy as np
+import json
+from os import listdir
+from os.path import isfile, join
 
 gym.scoreboard.api_key = "sk_hJMbMlYzSpSsucakOMOULg"
 
@@ -28,21 +31,24 @@ class GreedyMemoryAgent(SequenceAgent):
     This Agent models the input (state space) as a sequence and 1/0 as the output.
     It is called MemoryAgent because it remembers its history to take better decisions in future
     """
-    def __init__(self, env, e=0.1, memory_size=50000):
+    def __init__(self, env, **kwargs):
 
         # Environment and Action Space
         self.env = env
         self.action_space = env.action_space
 
         # Store History
-        self.memory_size = memory_size
+        self.memory_size = kwargs.get('memory_size', 50000)
         self.past_obs = []
         self.past_action = []
         self.value_function =[0]
 
         # Configuration
-        self.e = e
-        self.minimum_exploration = 50
+        self.e = kwargs.get('e', 0.10)
+        self.minimum_exploration = kwargs.get('minimum_exploration', 50)
+
+        # Model parameters
+        self.knn = kwargs.get('knn', 10)
 
 
     def store_episode(self, obs, reward, done, action):
@@ -70,7 +76,7 @@ class GreedyMemoryAgent(SequenceAgent):
         from sklearn.neighbors import KNeighborsRegressor
 
         # Models used
-        classifier = KNeighborsRegressor(n_neighbors=2)
+        classifier = KNeighborsRegressor(n_neighbors=self.knn)
 
         # classifier
         classifier_input = np.array([[*e[0], e[1]] for e in zip(self.past_obs[:-1], self.past_action)])
@@ -98,7 +104,7 @@ class GreedyMemoryAgent(SequenceAgent):
 
             # If all possible history to be known is known forget earliest event
             if(self.memory_full()):
-                self.episode_pop()
+                self.pop_episode()
 
             # Compute Policy
             information_state, current_policy = self.policy()
@@ -126,19 +132,18 @@ class RandomAgent(object):
         return self.action_space.sample()
 
 
-def run_game(agent_type, upload=False):
+def run_game(agent_type, params={}, upload=False):
 
     env = gym.make('CartPole-v0')
-    agent_name = 'random_agent'
-    outdir = '/tmp/'+agent_name+'_results'
+    outdir = '/tmp/'+'cart_pole'+'_results'
     env.monitor.start(outdir, force=True, seed=0)
     episode_count = 300
     max_steps = 200
 
     if(agent_type is 'random'):
-        agent = RandomAgent(env)
+        agent = RandomAgent(env, **params)
     else:
-        agent = GreedyMemoryAgent(env)
+        agent = GreedyMemoryAgent(env, **params)
 
     for i in range(episode_count):
         # Initial Values
@@ -160,4 +165,7 @@ def run_game(agent_type, upload=False):
     env.monitor.close()
     if upload:
         gym.upload(outdir)
-    return agent
+
+    result_stats = json.load(open([join(outdir, f) for f in listdir(outdir) if isfile(join(outdir, f)) and f.startswith('openaigym.episode_batch')][0]))
+
+    return agent, result_stats
